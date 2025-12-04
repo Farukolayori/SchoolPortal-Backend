@@ -2,25 +2,28 @@ import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 
 /**
- * REGISTER USER (with matricNumber generation)
+ * REGISTER USER (with matricNumber from frontend)
  */
 export const registerUser = async (req, res) => {
   try {
     const { 
       firstName, 
       lastName, 
-      email, 
+      email,
+      password,
+      matricNumber, // Now accepting from frontend
       dateStarted, 
       department,
       profileImage 
     } = req.body;
 
-    console.log("Registration attempt for:", email);
+    console.log("📝 Registration attempt for:", email);
+    console.log("📋 Matric Number received:", matricNumber);
 
     // Validate required fields
-    if (!firstName || !lastName || !email || !dateStarted) {
+    if (!firstName || !lastName || !email || !dateStarted || !matricNumber) {
       return res.status(400).json({ 
-        message: "First name, last name, email, and date started are required" 
+        message: "First name, last name, email, matric number, and date started are required" 
       });
     }
 
@@ -30,27 +33,23 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ message: "Email already exists" });
     }
 
-    // Generate random 10-digit matric number
-    const matricNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
-    
-    // Check if matric number already exists (unlikely but possible)
+    // Check if matric number already exists
     const existingMatric = await User.findOne({ matricNumber });
     if (existingMatric) {
-      // If duplicate, generate another one
-      matricNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+      return res.status(400).json({ message: "Matric number already exists" });
     }
 
-    // Generate a random password (for now - you should add password field to frontend)
-    const randomPassword = Math.random().toString(36).slice(-8);
-    const hashedPassword = await bcrypt.hash(randomPassword, 10);
+    // Use password from request or generate random one
+    const userPassword = password || Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(userPassword, 10);
 
-    // Create new user
+    // Create new user with matric number from frontend
     const newUser = new User({
       firstName,
       lastName,
       email,
       password: hashedPassword,
-      matricNumber,
+      matricNumber, // Use the matric number sent from frontend
       department: department || null,
       dateStarted: new Date(dateStarted),
       role: 'user',
@@ -58,6 +57,8 @@ export const registerUser = async (req, res) => {
     });
 
     await newUser.save();
+
+    console.log("✅ User registered successfully with matric:", matricNumber);
 
     // Return success with matric number
     res.status(201).json({
@@ -72,12 +73,11 @@ export const registerUser = async (req, res) => {
         dateStarted: newUser.dateStarted,
         role: newUser.role,
         profileImage: newUser.profileImage,
-      },
-      generatedPassword: randomPassword // Include this for testing only
+      }
     });
 
   } catch (err) {
-    console.error("Registration error:", err);
+    console.error("❌ Registration error:", err);
     
     // Handle specific Mongoose errors
     if (err.name === 'ValidationError') {
@@ -108,6 +108,10 @@ export const loginUser = async (req, res) => {
   try {
     const { email, matricNumber } = req.body;
 
+    console.log("🔐 Login attempt:");
+    console.log("   Email:", email);
+    console.log("   Matric Number:", matricNumber);
+
     // Validate input
     if (!email || !matricNumber) {
       return res.status(400).json({ 
@@ -118,13 +122,26 @@ export const loginUser = async (req, res) => {
     // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
+      console.log("❌ User not found with email:", email);
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Verify matric number matches
-    if (user.matricNumber !== matricNumber) {
+    console.log("👤 User found:", user.email);
+    console.log("🎓 Stored matric number:", user.matricNumber);
+    console.log("🎓 Provided matric number:", matricNumber);
+
+    // Verify matric number matches (trim whitespace and compare as strings)
+    const storedMatric = user.matricNumber?.toString().trim();
+    const providedMatric = matricNumber?.toString().trim();
+
+    if (storedMatric !== providedMatric) {
+      console.log("❌ Matric number mismatch!");
+      console.log("   Stored:", storedMatric);
+      console.log("   Provided:", providedMatric);
       return res.status(401).json({ message: "Invalid matric number" });
     }
+
+    console.log("✅ Login successful for:", user.email);
 
     // Login successful
     res.status(200).json({
@@ -143,7 +160,7 @@ export const loginUser = async (req, res) => {
     });
     
   } catch (err) {
-    console.error("Login error:", err);
+    console.error("🚨 Login error:", err);
     res.status(500).json({ 
       message: "Server error during login",
       error: process.env.NODE_ENV === 'development' ? err.message : undefined
@@ -165,7 +182,7 @@ export const adminAddUser = async (req, res) => {
       profileImage 
     } = req.body;
 
-    console.log("Admin adding user:", email);
+    console.log("👨‍💼 Admin adding user:", email);
 
     // Validate required fields
     if (!firstName || !lastName || !email || !dateStarted) {
@@ -184,9 +201,10 @@ export const adminAddUser = async (req, res) => {
     let matricNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
     
     // Check if matric number already exists
-    const existingMatric = await User.findOne({ matricNumber });
-    if (existingMatric) {
+    let existingMatric = await User.findOne({ matricNumber });
+    while (existingMatric) {
       matricNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+      existingMatric = await User.findOne({ matricNumber });
     }
 
     // Generate random password
@@ -208,6 +226,8 @@ export const adminAddUser = async (req, res) => {
 
     await newUser.save();
 
+    console.log("✅ User added successfully with matric:", matricNumber);
+
     // Return success response for admin
     res.status(201).json({
       message: "User added successfully!",
@@ -222,12 +242,12 @@ export const adminAddUser = async (req, res) => {
         role: newUser.role,
         profileImage: newUser.profileImage,
       },
-      temporaryPassword: randomPassword, // For admin to share with user
+      temporaryPassword: randomPassword,
       note: "Share matric number and temporary password with the user"
     });
 
   } catch (err) {
-    console.error("Admin add user error:", err);
+    console.error("❌ Admin add user error:", err);
     
     if (err.name === 'ValidationError') {
       const messages = Object.values(err.errors).map(val => val.message);
