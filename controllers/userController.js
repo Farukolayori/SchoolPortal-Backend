@@ -142,3 +142,41 @@ export const updateUser = async (req, res) => {
     });
   }
 };
+exports.forgotMatric = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ 
+        message: 'Please provide email and password' 
+      });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+      return res.status(404).json({ 
+        message: 'No account found with this email' 
+      });
+    }
+
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordMatch) {
+      return res.status(401).json({ 
+        message: 'Invalid password' 
+      });
+    }
+
+    return res.status(200).json({ 
+      matricNumber: user.matricNumber,
+      message: 'Matric number retrieved successfully'
+    });
+
+  } catch (error) {
+    console.error('Forgot matric error:', error);
+    return res.status(500).json({ 
+      message: 'Server error. Please try again later.' 
+    });
+  }
+};
