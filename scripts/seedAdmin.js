@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
-import User from "./models/userModel.js"; // Adjust path as needed
+import User from "../models/userModel.js"; // ✅ Fixed: Go up one directory
 
 dotenv.config();
 
@@ -12,7 +12,7 @@ const seedAdmin = async () => {
 
     const adminEmail = "mark@gmail.com";
     const adminPassword = "Olayori25";
-    const adminMatric = "ADMIN2024"; // ✅ Add matric number
+    const adminMatric = "ADMIN2024"; // ✅ Matric number for admin
 
     // Delete existing admin if found
     const existingAdmin = await User.findOne({ email: adminEmail });
@@ -31,11 +31,11 @@ const seedAdmin = async () => {
       lastName: "Oluwapelumi",
       email: adminEmail,
       password: hashedPassword,
-      matricNumber: adminMatric, // ✅ IMPORTANT: Add matric number
-      department: "Administration", // ✅ Optional but recommended
+      matricNumber: adminMatric, // ✅ IMPORTANT: Matric number
+      department: "Computer Science", // ✅ Valid enum value
       dateStarted: new Date(),
       role: "admin",
-      profileImage: null
+      profileImage: ""
     });
 
     await admin.save();
