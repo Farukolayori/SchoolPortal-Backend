@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
-import User from "../models/userModel.js";
+import User from "./models/userModel.js"; // Adjust path as needed
 
 dotenv.config();
 
@@ -12,7 +12,7 @@ const seedAdmin = async () => {
 
     const adminEmail = "mark@gmail.com";
     const adminPassword = "Olayori25";
-    const adminMatric = "ADMIN12345"; // Add a fixed matric number for admin
+    const adminMatric = "ADMIN2024"; // ✅ Add matric number
 
     // Delete existing admin if found
     const existingAdmin = await User.findOne({ email: adminEmail });
@@ -31,11 +31,11 @@ const seedAdmin = async () => {
       lastName: "Oluwapelumi",
       email: adminEmail,
       password: hashedPassword,
-      matricNumber: adminMatric, // ✅ Add matric number
+      matricNumber: adminMatric, // ✅ IMPORTANT: Add matric number
+      department: "Administration", // ✅ Optional but recommended
       dateStarted: new Date(),
       role: "admin",
-      profileImage: null,
-      department: "Administration" // Optional: add department
+      profileImage: null
     });
 
     await admin.save();
@@ -44,15 +44,20 @@ const seedAdmin = async () => {
     console.log("═══════════════════════════════════");
     console.log("📧 Email:", adminEmail);
     console.log("🔑 Password:", adminPassword);
-    console.log("🎓 Matric Number:", adminMatric); // ✅ Display matric
+    console.log("🎓 Matric Number:", adminMatric);
     console.log("👤 Role: admin");
+    console.log("═══════════════════════════════════");
+    console.log("");
+    console.log("🔐 LOGIN CREDENTIALS:");
+    console.log("   Email: " + adminEmail);
+    console.log("   Matric: " + adminMatric);
     console.log("═══════════════════════════════════");
     
     // Verify the admin was created
     const verifyAdmin = await User.findOne({ email: adminEmail });
     if (verifyAdmin && verifyAdmin.role === "admin") {
       console.log("✅ Verification successful - Admin exists in database");
-      console.log("🎓 Admin Matric Number:", verifyAdmin.matricNumber);
+      console.log("🎓 Stored Matric Number:", verifyAdmin.matricNumber);
     } else {
       console.log("❌ Verification failed - Something went wrong");
     }

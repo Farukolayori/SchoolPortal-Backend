@@ -269,3 +269,65 @@ export const adminAddUser = async (req, res) => {
     });
   }
 };
+/**
+ * ADMIN LOGIN (using email and password only)
+ */
+export const adminLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    console.log("👨‍💼 Admin login attempt for:", email);
+
+    if (!email || !password) {
+      return res.status(400).json({ 
+        message: "Email and password are required" 
+      });
+    }
+
+    // Find admin user by email
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    
+    if (!user) {
+      console.log("❌ User not found with email:", email);
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if user is admin
+    if (user.role !== 'admin') {
+      console.log("❌ User is not an admin:", email);
+      return res.status(403).json({ message: "Access denied. Admin only." });
+    }
+
+    // Verify password
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    
+    if (!isPasswordMatch) {
+      console.log("❌ Invalid password for admin:", email);
+      return res.status(401).json({ message: "Invalid password" });
+    }
+
+    console.log("✅ Admin login successful:", user.email);
+
+    res.status(200).json({
+      message: "Login successful!",
+      user: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        matricNumber: user.matricNumber,
+        department: user.department,
+        dateStarted: user.dateStarted,
+        role: user.role,
+        profileImage: user.profileImage,
+      },
+    });
+    
+  } catch (err) {
+    console.error("🚨 Admin login error:", err);
+    res.status(500).json({ 
+      message: "Server error during login",
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+};

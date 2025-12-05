@@ -1,11 +1,12 @@
 import express from "express";
-import { registerUser, loginUser } from "../controllers/authController.js";
-import { forgotMatric } from "../controllers/userController.js"; // ✅ Import from userController
+import { registerUser, loginUser, adminLogin } from "../controllers/authController.js";
+import { forgotMatric } from "../controllers/userController.js";
 
 const router = express.Router();
 
 router.post("/register", registerUser);
 router.post("/login", loginUser);
-router.post("/forgot-matric", forgotMatric); // ✅ Add this route
+router.post("/admin/login", adminLogin); // ✅ Add admin login route
+router.post("/forgot-matric", forgotMatric);
 
 export default router;
