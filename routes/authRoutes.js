@@ -1,17 +1,11 @@
 import express from "express";
-import { 
-  registerUser, 
-  loginUser, 
-  adminAddUser 
-} from "../controllers/authController.js";
+import { registerUser, loginUser } from "../controllers/authController.js";
+import { forgotMatric } from "../controllers/userController.js"; // ✅ Import from userController
 
 const router = express.Router();
 
-// Public routes
 router.post("/register", registerUser);
 router.post("/login", loginUser);
-
-// Admin routes (you can add auth middleware later)
-router.post("/admin/add-user", adminAddUser);
+router.post("/forgot-matric", forgotMatric); // ✅ Add this route
 
 export default router;

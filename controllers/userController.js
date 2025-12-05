@@ -1,23 +1,25 @@
 import User from "../models/userModel.js";
+import bcrypt from "bcryptjs"; // ✅ Add this import at the top if not already there
 
 /**
  * GET ALL USERS (for Admin Dashboard)
  */
 export const getAllUsers = async (req, res) => {
   try {
-    // Get all users without passwords
     const users = await User.find()
-      .select('-password') // Exclude password field
-      .sort({ createdAt: -1 }); // Newest first
+      .select('-password')
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
       count: users.length,
       users: users.map(user => ({
-        id: user._id,
+        _id: user._id, // ✅ Changed from 'id' to '_id' to match frontend
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
+        matricNumber: user.matricNumber, // ✅ Add matric number
+        department: user.department, // ✅ Add department
         dateStarted: user.dateStarted,
         role: user.role,
         profileImage: user.profileImage,
@@ -54,6 +56,8 @@ export const getUserById = async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
+        matricNumber: user.matricNumber,
+        department: user.department,
         dateStarted: user.dateStarted,
         role: user.role,
         profileImage: user.profileImage,
@@ -111,7 +115,6 @@ export const updateUser = async (req, res) => {
       });
     }
 
-    // Update fields if provided
     if (firstName) user.firstName = firstName;
     if (lastName) user.lastName = lastName;
     if (email) user.email = email;
@@ -142,9 +145,15 @@ export const updateUser = async (req, res) => {
     });
   }
 };
-exports.forgotMatric = async (req, res) => {
+
+/**
+ * FORGOT MATRIC NUMBER - Retrieve matric using email and password
+ */
+export const forgotMatric = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    console.log("🔍 Forgot matric request for email:", email);
 
     if (!email || !password) {
       return res.status(400).json({ 
@@ -152,21 +161,29 @@ exports.forgotMatric = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    // Find user by email (case-insensitive)
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
 
     if (!user) {
+      console.log("❌ No user found with email:", email);
       return res.status(404).json({ 
         message: 'No account found with this email' 
       });
     }
 
+    console.log("👤 User found:", user.email);
+
+    // Verify password
     const isPasswordMatch = await bcrypt.compare(password, user.password);
 
     if (!isPasswordMatch) {
+      console.log("❌ Password mismatch for user:", email);
       return res.status(401).json({ 
         message: 'Invalid password' 
       });
     }
+
+    console.log("✅ Matric number retrieved successfully:", user.matricNumber);
 
     return res.status(200).json({ 
       matricNumber: user.matricNumber,
@@ -174,7 +191,7 @@ exports.forgotMatric = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Forgot matric error:', error);
+    console.error('❌ Forgot matric error:', error);
     return res.status(500).json({ 
       message: 'Server error. Please try again later.' 
     });

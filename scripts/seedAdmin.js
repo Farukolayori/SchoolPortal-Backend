@@ -12,6 +12,7 @@ const seedAdmin = async () => {
 
     const adminEmail = "mark@gmail.com";
     const adminPassword = "Olayori25";
+    const adminMatric = "ADMIN12345"; // Add a fixed matric number for admin
 
     // Delete existing admin if found
     const existingAdmin = await User.findOne({ email: adminEmail });
@@ -30,9 +31,11 @@ const seedAdmin = async () => {
       lastName: "Oluwapelumi",
       email: adminEmail,
       password: hashedPassword,
+      matricNumber: adminMatric, // ✅ Add matric number
       dateStarted: new Date(),
       role: "admin",
-      profileImage: null
+      profileImage: null,
+      department: "Administration" // Optional: add department
     });
 
     await admin.save();
@@ -41,6 +44,7 @@ const seedAdmin = async () => {
     console.log("═══════════════════════════════════");
     console.log("📧 Email:", adminEmail);
     console.log("🔑 Password:", adminPassword);
+    console.log("🎓 Matric Number:", adminMatric); // ✅ Display matric
     console.log("👤 Role: admin");
     console.log("═══════════════════════════════════");
     
@@ -48,6 +52,7 @@ const seedAdmin = async () => {
     const verifyAdmin = await User.findOne({ email: adminEmail });
     if (verifyAdmin && verifyAdmin.role === "admin") {
       console.log("✅ Verification successful - Admin exists in database");
+      console.log("🎓 Admin Matric Number:", verifyAdmin.matricNumber);
     } else {
       console.log("❌ Verification failed - Something went wrong");
     }
