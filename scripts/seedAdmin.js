@@ -27,8 +27,8 @@ const seedAdmin = async () => {
     const hashedPassword = await bcrypt.hash(adminPassword, 10);
     
     const admin = new User({
-      firstName: "Ariyo",
-      lastName: "Oluwapelumi",
+      firstName: "Marvelous",
+      lastName: "Offor",
       email: adminEmail,
       password: hashedPassword,
       matricNumber: adminMatric, // ✅ IMPORTANT: Matric number
