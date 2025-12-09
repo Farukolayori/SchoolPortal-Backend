@@ -10,9 +10,9 @@ const seedAdmin = async () => {
     await mongoose.connect(process.env.MONGO_URI);
     console.log("✅ MongoDB connected");
 
-    const adminEmail = "mark@gmail.com";
+    const adminEmail = "offormarvelous4@gmail.com";
     const adminPassword = "Olayori25";
-    const adminMatric = "ADMIN2024"; // ✅ Matric number for admin
+    const adminMatric = "ADMIN2025"; // ✅ Matric number for admin
 
     // Delete existing admin if found
     const existingAdmin = await User.findOne({ email: adminEmail });

@@ -1,11 +1,22 @@
-import express from "express";
-import { registerUser, loginUser } from "../controllers/authController.js";
-import { forgotMatric } from "../controllers/userController.js"; // ✅ Import from userController
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 
-const router = express.Router();
+dotenv.config();
 
-router.post("/register", registerUser);
-router.post("/login", loginUser);
-router.post("/forgot-matric", forgotMatric); // ✅ Add this route
+export const protect = (req, res, next) => {
+  const authHeader = req.headers.authorization;
 
-export default router;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "No token, authorization denied" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(401).json({ message: "Invalid or expired token" });
+  }
+};
